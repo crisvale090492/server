@@ -1,5 +1,6 @@
 package com.pokemon.server
 
+import Pokemon
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -8,7 +9,7 @@ class UsuarioController(private val usuarioRepository: UsuarioRepository) {
     // Podemos hacer la request desde el navegador.
     @GetMapping("crearUsuario/{nombre}/{pass}")
     @Synchronized
-    fun requestCrearUsuario(@PathVariable nombre: String, @PathVariable pass: String) : Any {
+    fun requestCrearUsuario(@PathVariable nombre: String, @PathVariable pass: String): Any {
         val userOptinal = usuarioRepository.findById(nombre)
 
         return if (userOptinal.isPresent) {
@@ -30,7 +31,7 @@ class UsuarioController(private val usuarioRepository: UsuarioRepository) {
      */
     @PostMapping("crearUsuario")
     @Synchronized
-    fun requestCrearUsuarioJson(@RequestBody usuario: Usuario) : Any {
+    fun requestCrearUsuarioJson(@RequestBody usuario: Usuario): Any {
         val userOptinal = usuarioRepository.findById(usuario.nombre)
 
         return if (userOptinal.isPresent) {
@@ -48,7 +49,7 @@ class UsuarioController(private val usuarioRepository: UsuarioRepository) {
 
 
     @PostMapping("pokemonFavorito/{token}/{pokemonId}")
-    fun guardarPokemonFavorito(@PathVariable token: String, @PathVariable pokemonId: Int) : Any {
+    fun guardarPokemonFavorito(@PathVariable token: String, @PathVariable pokemonId: Int): String {
         println(token)
         usuarioRepository.findAll().forEach { user ->
             if (user.token == token) {
@@ -60,4 +61,21 @@ class UsuarioController(private val usuarioRepository: UsuarioRepository) {
         return "Token no encontrado"
     }
 
+    @GetMapping("pokemonFavorito/{token}")
+    fun obtenerPokemonFavorito(@PathVariable token: String): Any {
+        usuarioRepository.findAll().forEach { user ->
+            if (user.token == token) {
+                user.pokemonFavoritoId?.let { pokemonFavoritoIdNotNull ->
+                    listaPokemon.listaPokemon.forEach { pokemon ->
+                        if (pokemonFavoritoIdNotNull.toLong() == pokemon.id) {
+                            return pokemon
+                        }
+                    }
+                } ?: run {
+                    return "El usuario no tiene pokemon favorito"
+                }
+            }
+        }
+            return "Token no encontrado"
+    }
 }
