@@ -76,6 +76,70 @@ class UsuarioController(private val usuarioRepository: UsuarioRepository) {
                 }
             }
         }
-            return "Token no encontrado"
+        return "Token no encontrado"
+    }
+
+    @PostMapping("pokemonCapturado/{token}/{pokemonId}")
+    fun guardarPokemonCapturado(@PathVariable token: String, @PathVariable pokemonId: Int): String {
+        usuarioRepository.findAll().forEach { user ->
+            if (user.token == token) {
+                listaPokemon.listaPokemon.forEach { pokemon ->
+                    if (pokemonId.toLong() == pokemon.id) {
+                        user.pokemonsCapturados.add(pokemonId)
+                        usuarioRepository.save(user)
+                        return "Pokemon guardado"
+                    }
+                }
+                return "El id del pokemon no existe"
+            }
+        }
+        return "Token no encontrado"
+    }
+
+    @GetMapping("visualizarCapturado/{token}")
+    fun visualizarPokemonCapturado(@PathVariable token: String): Any {
+        var pokemonsCapturados = mutableListOf<Pokemon>()
+        usuarioRepository.findAll().forEach { user ->
+            if (user.token == token) {
+                user.pokemonsCapturados.forEach { idPokemon ->
+                    listaPokemon.listaPokemon.forEach { pokemon ->
+                        if (idPokemon.toLong() == (pokemon.id)) {
+                            pokemonsCapturados.add(pokemon)
+                        }
+                    }
+                }
+                return pokemonsCapturados
+            }
+        }
+        return "Token no encontrado"
+    }
+
+    @PostMapping("intercambiarPokemon/{tokenUsuario1}/{tokenUsuario2}/{pokemonId1}/{pokemonId2}")
+    fun intercambiarPokemon(
+        @PathVariable token1: String,
+        @PathVariable token2: String,
+        @PathVariable pokemonId1: String,
+        @PathVariable pokemonId2: String): Any {
+        var pokemon1: Pokemon
+        var pokemon2: Pokemon
+        usuarioRepository.findAll().forEach { user ->
+            if (user.token == token1)
+                if (user.token == token2)
+            }
+
+                usuarioRepository.findAll().forEach { user ->
+                    if (user.token == token2) {
+                listaPokemon.listaPokemon.forEach { pokemon ->
+                    if (pokemonId1.toLong() == pokemon.id) {
+                        pokemon1 = pokemon
+
+                    }
+                }
+                return "El id del pokemon no existe"
+            }
+        }
+        return "Token1 no encontrado"
+
+
     }
 }
