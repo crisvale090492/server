@@ -114,63 +114,94 @@ class UsuarioController(private val usuarioRepository: UsuarioRepository) {
         return "Token no encontrado"
     }
 
-    @PostMapping("intercambiarPokemon/{tokenUsuario1}/{tokenUsuario2}/{pokemonId1}/{pokemonId2}")
+    @PostMapping("intercambiarPokemon/{token1}/{token2}/{pokemonId1}/{pokemonId2}")
     fun intercambiarPokemon(
         @PathVariable token1: String,
         @PathVariable token2: String,
         @PathVariable pokemonId1: String,
         @PathVariable pokemonId2: String): Any {
-        usuarioRepository.findAll().forEach { user1 ->
-            if (user1.token == token1){
-                usuarioRepository.findAll().forEach { user2 ->
-                    if (user2.token == token2){
-                        listaPokemon.listaPokemon.forEach { pokemon1 ->
-                            if (pokemonId1.toLong() == pokemon1.id) {
-                                user1.pokemonsCapturados.forEach { pokeCapturado1 ->
-                                    if (pokemonId1.toInt() == pokeCapturado1){
-                                        listaPokemon.listaPokemon.forEach { pokemon2 ->
-                                            if (pokemonId2.toLong() == pokemon2.id) {
-                                                user2.pokemonsCapturados.forEach { pokeCapturado2 ->
-                                                    if (pokemonId2.toInt() == pokeCapturado2) {
-                                                        user2.pokemonsCapturados.add(pokeCapturado1)
-                                                        user1.pokemonsCapturados.add(pokeCapturado2)
-                                                        user2.pokemonsCapturados.remove(pokeCapturado2)
-                                                        user1.pokemonsCapturados.remove(pokeCapturado1)
-                                                }
-                                        }
-                                                return "El usuario 2 no es dueño de este pokemon"
-                                }
-                            }
-                                        return "El pokemon 2 no existe"
-                        }
+        var pokemon1 : Pokemon? = null
+        var pokemon2 : Pokemon? = null
+        var user1 : Usuario? = null
+        var user2 : Usuario? = null
+        var captura1 = false
+        var captura2 = false
 
-                                }
-                                return "El usuario 1 no es dueño de este pokemon"
-
-                                }
-                            else
-                                return "El pokemon 1 no existe"
-                        }
-                        listaPokemon.listaPokemon.forEach { pokemon2 ->
-                            if (pokemonId2.toLong() == pokemon2.id) {
-                            }
-                        }
-                        return "Los pokemon no existen"
-
-
-
-                        }
-                }
-                return "El token del usuario 2 no existe"
-
-                }
-            else
-                return "El token del usuario 1 no existe"
-            }
-        usuarioRepository.findAll().forEach { user2 ->
-            if (user2.token == token2) {
+        usuarioRepository.findAll().forEach {currentUser ->
+            if (currentUser.token == token1) {
+                user1 = currentUser
+                return@forEach
             }
         }
-        return "Los token no existen"
+        usuarioRepository.findAll().forEach {currentUser2 ->
+            if (currentUser2.token == token2) {
+                user2 = currentUser2
+                return@forEach
+            }
+        }
+        if (user1 == null && user2 == null ) {
+            return "Los token no existen"
+        }
+        if (user1 == null)
+            return "El token del usuario 1 no existe"
+        if (user2 == null)
+            return "El token del usuario 2 no existe"
+
+        listaPokemon.listaPokemon.forEach {poke1 ->
+            if (pokemonId1.toLong() == poke1.id) {
+                pokemon1 = poke1
+                return@forEach
+            }
+        }
+        listaPokemon.listaPokemon.forEach {poke2 ->
+            if (pokemonId2.toLong() == poke2.id) {
+                pokemon2 = poke2
+                return@forEach
+            }
+        }
+        if (pokemon1 == null && pokemon2 == null ) {
+            return "Los pokemons no existen"
+        }
+        if (pokemon1 == null)
+            return "El pokemon1 no existe"
+        if (pokemon2 == null)
+            return "El pokemon2 no existe"
+
+        user1?.pokemonsCapturados?.forEach {pokeCapturado1 ->
+            if (pokemon1?.id == pokeCapturado1.toLong()){
+                captura1 = true
+                return@forEach
+            }
+        }
+        user2?.pokemonsCapturados?.forEach {pokeCapturado2 ->
+            if (pokemon2?.id == pokeCapturado2.toLong()){
+                captura2 = true
+                return@forEach
+            }
+        }
+        if (!captura1 && !captura2) {
+            return "Los usuarios no tienen a los pokemons"
+        }
+        if (!captura1)
+            return "El usuario1 no tiene al pokemon"
+        if (!captura2)
+            return "El usuario2 no tiene al pokemon"
+        pokemon2?.id?.let {
+            user1?.pokemonsCapturados?.add(it.toInt())
+            user2?.pokemonsCapturados?.remove(it.toInt())
+
+        }
+        pokemon1?.id?.let {
+            user2?.pokemonsCapturados?.add(it.toInt())
+            user1?.pokemonsCapturados?.remove(it.toInt())
+        }
+        user1?.let {
+            usuarioRepository.save(it)
+        }
+        user2?.let {
+            usuarioRepository.save(it)
+        }
+        return "Cambio realizado correctamente"
+
     }
 }
